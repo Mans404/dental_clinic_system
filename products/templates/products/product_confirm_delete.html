@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>حذف المنتج</h2>
+<p>هل أنت متأكد من حذف المنتج "{{ product.name }}"؟</p>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% if referencing %}
+<p>العناصر المرجعية الموجودة:</p>
+<ul>
+    {% for it in referencing %}
+    <li>{{ it }}</li>
+    {% endfor %}
+</ul>
+<p>لا يمكنك حذف المنتج ما لم تقم بإزالة أو تعديل عناصر الفاتورة المرتبطة.</p>
+{% endif %}
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">حذف</button>
+    <a href="{% url 'products:product_list' %}" class="btn btn-secondary">إلغاء</a>
+</form>
+{% endblock %}

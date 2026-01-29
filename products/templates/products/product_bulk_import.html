@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>استيراد منتجات من ملف CSV</h2>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    {{ error }}
+</div>
+{% endif %}
+
+{% if success %}
+<div class="alert alert-success" role="alert">
+    {{ success }}
+</div>
+
+{% if errors %}
+<h4>تحذيرات:</h4>
+<ul>
+    {% for error in errors %}
+    <li>{{ error }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endif %}
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">تنسيق الملف:</h5>
+        <p>يجب أن يحتوي ملف CSV على الأعمدة التالية (بدون مسافات في أسماء الأعمدة):</p>
+        <ul>
+            <li><strong>name</strong> - اسم المنتج (مطلوب)</li>
+            <li><strong>quantity</strong> - الكمية (مطلوب، رقم صحيح)</li>
+            <li><strong>price</strong> - السعر (مطلوب، رقم عشري)</li>
+            <li><strong>wholesale_price</strong> - سعر الجملة (اختياري، رقم عشري)</li>
+        </ul>
+        <p><strong>ملاحظة:</strong> يدعم البرنامج فواصل فواصل الفواصل (,) أو الأنابيب (|)</p>
+        <p><strong>مثال 1 (بفواصل):</strong></p>
+        <pre>name,quantity,price,wholesale_price
+منتج 1,100,50.00,35.00
+منتج 2,50,75.50,55.00
+منتج 3,200,30.25,20.00</pre>
+        <p><strong>مثال 2 (بأنابيب):</strong></p>
+        <pre>name|quantity|price|wholesale_price
+منتج 1|100|50.00|35.00
+منتج 2|50|75.50|55.00</pre>
+        <p><strong>نصيحة من Excel:</strong> احفظ الملف باسم CSV (Comma delimited) ثم تأكد من أن أسماء الأعمدة صحيحة
+            تماماً بدون مسافات إضافية</p>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="csv_file" class="form-label">اختر ملف CSV:</label>
+        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+        <small class="form-text text-muted">الملف يجب أن يكون بصيغة CSV مع ترميز UTF-8</small>
+    </div>
+    <button type="submit" class="btn btn-success">استيراد المنتجات</button>
+    <a href="{% url 'products:product_list' %}" class="btn btn-secondary">إلغاء</a>
+</form>
+
+<a href="{% url 'products:product_list' %}" class="btn btn-link mt-4">العودة إلى قائمة المنتجات</a>
+{% endblock %}

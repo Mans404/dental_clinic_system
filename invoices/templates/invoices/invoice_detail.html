@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">🧾 الفاتورة #{{ invoice.id }}</h2>
+            <small class="text-muted">{{ invoice.created_at|date:"d/m/Y في H:i" }}</small>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn btn-outline-primary">
+                🖨️ طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- Invoice Details Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">تفاصيل الفاتورة</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <p><strong>رقم الفاتورة:</strong> #{{ invoice.id }}</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p><strong>التاريخ:</strong> {{ invoice.created_at|date:"d/m/Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">البنود</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-end">المنتج</th>
+                            <th class="text-center">الكمية</th>
+                            <th class="text-center">السعر الواحد</th>
+                            <th class="text-end">المجموع</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invoice.items.all %}
+                        <tr>
+                            <td class="text-end">{{ item.product.name }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-center">{{ item.price }} جنيه</td>
+                            <td class="text-end fw-bold">{{ item.total }} جنيه</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">لا توجد بنود في هذه الفاتورة</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8"></div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fs-5 fw-bold">الإجمالي:</span>
+                            <span class="fs-4 fw-bold text-primary">{{ invoice.total }} جنيه</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2 mb-4">
+        <a href="{% url 'invoices:invoice_list' %}" class="btn btn-secondary">
+            ← رجوع إلى الفواتير
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            🖨️ طباعة
+        </button>
+    </div>
+</div>
+
+<!-- Print Styles -->
+<style>
+    @media print {
+
+        .btn,
+        .d-flex {
+            display: none !important;
+        }
+
+        body {
+            background: white;
+        }
+
+        .card {
+            border: none;
+            box-shadow: none;
+        }
+    }
+</style>
+{% endblock %}

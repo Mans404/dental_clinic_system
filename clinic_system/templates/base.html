@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>نظام إدارة العيادة</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f4f6f8;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.4rem;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+
+            <a href="/dashboard/" class="navbar-brand">
+                🦷 3M Dental Store
+            </a>
+
+            <a href="/dashboard/" class="btn btn-light">
+                لوحة التحكم
+            </a>
+
+
+            <a href="{% url 'products:product_list' %}" class="btn btn-light">
+                المنتجات
+            </a>
+
+            <a href="{% url 'invoices:invoice_list' %}" class="btn btn-light">
+                الفواتير
+            </a>
+        </div>
+
+        </div>
+    </nav>
+
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- <a href="{% url 'logout' %}" class="btn btn-outline-light">
+        خروج
+    </a> -->
+
+
+</body>
+
+</html>

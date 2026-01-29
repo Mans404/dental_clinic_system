@@ -1,0 +1,569 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .invoice-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 20px;
+    }
+
+    .header-section h2 {
+        margin: 0;
+    }
+
+    .invoice-summary {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 16px;
+    }
+
+    .summary-row.total {
+        border-top: 2px solid #dee2e6;
+        padding-top: 15px;
+        font-weight: bold;
+        font-size: 20px;
+        color: #0d6efd;
+    }
+
+    .search-section {
+        margin-bottom: 30px;
+    }
+
+    .search-container {
+        position: relative;
+    }
+
+    #productSearch {
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid #dee2e6;
+        border-radius: 6px;
+    }
+
+    #productSearch:focus {
+        border-color: #0d6efd;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    }
+
+    #suggestionsList {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .autocomplete-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s;
+    }
+
+    .autocomplete-item:hover {
+        background-color: #e7f1ff;
+        color: #0d6efd;
+    }
+
+    .autocomplete-item strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .autocomplete-item small {
+        color: #666;
+        font-size: 13px;
+    }
+
+    .items-section {
+        margin-bottom: 30px;
+    }
+
+    .invoice-item {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        transition: box-shadow 0.2s;
+    }
+
+    .invoice-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .item-details {
+        flex-grow: 1;
+    }
+
+    .item-name {
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .item-info {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 8px;
+    }
+
+    .item-controls {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .quantity-control label {
+        min-width: 60px;
+        margin-bottom: 0;
+        font-size: 14px;
+    }
+
+    .quantity-control input {
+        width: 80px;
+        padding: 6px 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .price-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .price-control label {
+        min-width: 60px;
+        margin-bottom: 0;
+        font-size: 14px;
+    }
+
+    .price-control input {
+        width: 100px;
+        padding: 6px 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .item-total {
+        min-width: 120px;
+        text-align: right;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .btn-remove {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+
+    .btn-remove:hover {
+        background-color: #c82333;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        color: #666;
+    }
+
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background-color: #0b5ed7;
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+    }
+
+    .btn-primary:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5c636a;
+    }
+
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border: 1px solid #f5c6cb;
+    }
+
+    @media (max-width: 768px) {
+        .invoice-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .item-controls {
+            width: 100%;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .quantity-control,
+        .price-control {
+            width: 100%;
+        }
+
+        .quantity-control input,
+        .price-control input {
+            flex-grow: 1;
+        }
+
+        .item-total {
+            width: 100%;
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        .btn-remove {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="invoice-container">
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    <div class="header-section">
+        <h2>إنشاء فاتورة جديدة</h2>
+    </div>
+
+    <div class="search-section">
+        <label for="productSearch" class="form-label" style="font-weight: bold; margin-bottom: 10px;">البحث عن منتج
+            وإضافته</label>
+        <div class="search-container">
+            <input type="text" id="productSearch" class="form-control" placeholder="اكتب اسم المنتج...">
+            <div id="suggestionsList" style="display:none;"></div>
+        </div>
+    </div>
+
+    <div class="items-section">
+        <h4 style="margin-bottom: 20px;">عناصر الفاتورة</h4>
+        <div id="itemsContainer"></div>
+    </div>
+
+    <div class="invoice-summary">
+        <div class="summary-row">
+            <span>عدد العناصر:</span>
+            <span id="itemCount">0</span>
+        </div>
+        <div class="summary-row">
+            <span>إجمالي الكمية:</span>
+            <span id="totalQuantity">0</span>
+        </div>
+        <div class="summary-row total">
+            <span>الإجمالي:</span>
+            <span id="totalAmount">0.00</span>
+        </div>
+    </div>
+
+    <form id="invoiceForm" method="post" style="display:none;">
+        {% csrf_token %}
+        <input type="hidden" id="invoiceItems" name="items">
+    </form>
+
+    <div class="action-buttons">
+        <button type="button" class="btn btn-primary" id="submitBtn" disabled>إنشاء الفاتورة</button>
+        <a href="{% url 'invoices:invoice_list' %}" class="btn btn-secondary">إلغاء</a>
+    </div>
+</div>
+
+<script>
+    const invoiceItems = new Map(); // Map of product_id -> {product, quantity, price}
+    const searchInput = document.getElementById('productSearch');
+    const suggestionsList = document.getElementById('suggestionsList');
+    const itemsContainer = document.getElementById('itemsContainer');
+    const invoiceForm = document.getElementById('invoiceForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    searchInput.addEventListener('input', function () {
+        const query = this.value.trim();
+
+        if (query.length < 1) {
+            suggestionsList.style.display = 'none';
+            return;
+        }
+
+        fetch(`{% url 'products:product_autocomplete' %}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                suggestionsList.innerHTML = '';
+
+                if (data.length === 0) {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.innerHTML = '<small>لا توجد منتجات</small>';
+                    suggestionsList.appendChild(item);
+                } else {
+                    data.forEach(product => {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        item.innerHTML = `
+                            <strong>${product.name}</strong>
+                            <small>السعر: ${parseFloat(product.price).toFixed(2)} | المخزون: ${product.quantity}</small>
+                        `;
+                        item.addEventListener('click', function () {
+                            addProductToInvoice(product);
+                            searchInput.value = '';
+                            suggestionsList.style.display = 'none';
+                        });
+                        suggestionsList.appendChild(item);
+                    });
+                }
+
+                suggestionsList.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                suggestionsList.innerHTML = '<div class="autocomplete-item"><small style="color: #dc3545;">خطأ في البحث</small></div>';
+                suggestionsList.style.display = 'block';
+            });
+    });
+
+    function addProductToInvoice(product) {
+        if (invoiceItems.has(product.id)) {
+            // Product already exists, focus on quantity input
+            const input = document.querySelector(`input[data-product-id="${product.id}"][data-type="quantity"]`);
+            if (input) input.focus();
+            return;
+        }
+
+        invoiceItems.set(product.id, {
+            product_id: product.id,
+            name: product.name,
+            quantity: 1,
+            price: parseFloat(product.price),
+            available: product.quantity
+        });
+
+        renderItems();
+        updateSummary();
+    }
+
+    function removeProductFromInvoice(productId) {
+        invoiceItems.delete(productId);
+        renderItems();
+        updateSummary();
+    }
+
+    function updateItemQuantity(productId, quantity) {
+        const item = invoiceItems.get(productId);
+        if (!item) return;
+
+        const qty = parseInt(quantity);
+        if (qty < 0) return;
+        if (qty > item.available) {
+            alert(`الكمية المطلوبة أكبر من المتاح (${item.available})`);
+            return;
+        }
+
+        item.quantity = qty;
+        if (qty === 0) {
+            removeProductFromInvoice(productId);
+        } else {
+            renderItems();
+            updateSummary();
+        }
+    }
+
+    function updateItemPrice(productId, price) {
+        const item = invoiceItems.get(productId);
+        if (!item) return;
+
+        const p = parseFloat(price);
+        if (isNaN(p) || p < 0) return;
+
+        item.price = p;
+        renderItems();
+        updateSummary();
+    }
+
+    function renderItems() {
+        itemsContainer.innerHTML = '';
+
+        if (invoiceItems.size === 0) {
+            itemsContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>لم تضف أي منتجات حتى الآن. استخدم حقل البحث أعلاه لإضافة منتجات.</p>
+                </div>
+            `;
+            return;
+        }
+
+        invoiceItems.forEach((item, productId) => {
+            const itemTotal = item.price * item.quantity;
+            const itemEl = document.createElement('div');
+            itemEl.className = 'invoice-item';
+            itemEl.innerHTML = `
+                <div class="item-details">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-info">المتاح في المخزون: ${item.available}</div>
+                </div>
+                <div class="item-controls">
+                    <div class="price-control">
+                        <label>السعر:</label>
+                        <input type="number" step="0.01" data-product-id="${productId}" data-type="price" 
+                               value="${item.price.toFixed(2)}" min="0">
+                    </div>
+                    <div class="quantity-control">
+                        <label>الكمية:</label>
+                        <input type="number" data-product-id="${productId}" data-type="quantity" 
+                               value="${item.quantity}" min="1" max="${item.available}">
+                    </div>
+                    <div class="item-total">${itemTotal.toFixed(2)}</div>
+                    <button type="button" class="btn-remove" data-product-id="${productId}">حذف</button>
+                </div>
+            `;
+
+            const qtyInput = itemEl.querySelector(`input[data-type="quantity"]`);
+            const priceInput = itemEl.querySelector(`input[data-type="price"]`);
+            const removeBtn = itemEl.querySelector('.btn-remove');
+
+            qtyInput.addEventListener('change', (e) => updateItemQuantity(productId, e.target.value));
+            priceInput.addEventListener('change', (e) => updateItemPrice(productId, e.target.value));
+            removeBtn.addEventListener('click', () => removeProductFromInvoice(productId));
+
+            itemsContainer.appendChild(itemEl);
+        });
+    }
+
+    function updateSummary() {
+        const itemCount = invoiceItems.size;
+        let totalQuantity = 0;
+        let totalAmount = 0;
+
+        invoiceItems.forEach(item => {
+            totalQuantity += item.quantity;
+            totalAmount += item.price * item.quantity;
+        });
+
+        document.getElementById('itemCount').textContent = itemCount;
+        document.getElementById('totalQuantity').textContent = totalQuantity;
+        document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+
+        submitBtn.disabled = itemCount === 0;
+    }
+
+    submitBtn.addEventListener('click', function () {
+        const items = Array.from(invoiceItems.values());
+        document.getElementById('invoiceItems').value = JSON.stringify(items);
+
+        fetch('{% url "invoices:invoice_create" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ items: items })
+        })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.text().then(text => {
+                        throw new Error('فشل في إنشاء الفاتورة');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ: ' + error.message);
+            });
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function (e) {
+        if (e.target !== searchInput && !suggestionsList.contains(e.target)) {
+            suggestionsList.style.display = 'none';
+        }
+    });
+
+    // Initialize
+    renderItems();
+    updateSummary();
+</script>
+
+{% endblock %}

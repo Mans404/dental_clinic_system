@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>قائمة المنتجات</h2>
+<div class="mb-3">
+    <a href="{% url 'products:product_create' %}" class="btn btn-primary">إضافة منتج جديد</a>
+    <a href="{% url 'products:product_bulk_import' %}" class="btn btn-success">استيراد منتجات (CSV)</a>
+</div>
+
+<!-- Search box -->
+<div class="mb-3">
+    <div style="position: relative;">
+        <form method="get" class="d-flex gap-2" id="searchForm">
+            <div style="position: relative; flex: 1;">
+                <input type="text" id="searchInput" name="search" class="form-control" placeholder="ابحث عن المنتج..."
+                    value="{{ search_query }}">
+                <div id="suggestionsList" class="list-group" style="
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    display: none;
+                    max-height: 300px;
+                    overflow-y: auto;
+                    z-index: 1000;
+                    border: 1px solid #ccc;
+                    border-top: none;
+                    background: white;
+                "></div>
+            </div>
+            <button type="submit" class="btn btn-outline-primary">بحث</button>
+            {% if search_query %}
+            <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">مسح</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<style>
+    .autocomplete-item {
+        cursor: pointer;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .autocomplete-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .autocomplete-item small {
+        color: #666;
+        display: block;
+        margin-top: 3px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsList = document.getElementById('suggestionsList');
+        const searchForm = document.getElementById('searchForm');
+
+        searchInput.addEventListener('input', function () {
+            const query = this.value.trim();
+
+            if (query.length < 1) {
+                suggestionsList.style.display = 'none';
+                return;
+            }
+
+            fetch(`{% url 'products:product_autocomplete' %}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsList.innerHTML = '';
+
+                    if (data.length === 0) {
+                        suggestionsList.innerHTML = '<div style="padding: 10px; color: #999;">لا توجد منتجات</div>';
+                    } else {
+                        data.forEach(product => {
+                            const item = document.createElement('div');
+                            item.className = 'list-group-item autocomplete-item';
+                            item.innerHTML = `
+                            <strong>${product.name}</strong>
+                            <small>الكمية: ${product.quantity} | السعر: ${product.price}</small>
+                        `;
+                            item.addEventListener('click', function () {
+                                searchInput.value = product.name;
+                                suggestionsList.style.display = 'none';
+                                // Optionally submit the form
+                                searchForm.submit();
+                            });
+                            suggestionsList.appendChild(item);
+                        });
+                    }
+
+                    suggestionsList.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    suggestionsList.innerHTML = '<div style="padding: 10px; color: red;">خطأ في البحث</div>';
+                    suggestionsList.style.display = 'block';
+                });
+        });
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function (e) {
+            if (e.target !== searchInput && !suggestionsList.contains(e.target)) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+
+        // Show suggestions again when focusing the input
+        searchInput.addEventListener('focus', function () {
+            if (this.value.trim().length > 0) {
+                suggestionsList.style.display = 'block';
+            }
+        });
+    });
+</script>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>الاسم</th>
+            <th>الكمية</th>
+            <th>السعر</th>
+            <th>سعر الجملة</th>
+            <th>سعر الجملة للكمية</th>
+            <th>سعر الكمية</th>
+            <th>إجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in products %}
+        <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.product.quantity }}</td>
+            <td>{{ item.product.price }}</td>
+            <td>{{ item.wholesale_unit|default:'-' }}</td>
+            <td>{{ item.wholesale_total|default:'-' }}</td>
+            <td>{{ item.quantity_total|default:'-' }}</td>
+            <td>
+                <a href="{% url 'products:product_edit' item.product.id %}" class="btn btn-sm btn-warning">تعديل</a>
+                <a href="{% url 'products:product_delete' item.product.id %}" class="btn btn-sm btn-danger">حذف</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">لا توجد منتجات.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination -->
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">الأولى</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<p class="text-muted">الصفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</p>
+
+<a href="{% url 'invoices:invoice_list' %}">الذهاب إلى الفواتير</a>
+{% endblock %}

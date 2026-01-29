@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">📊 لوحة التحكم</h2>
+
+<div class="row g-4">
+
+    <div class="col-md-4">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h5 class="card-title">عدد المنتجات</h5>
+                <p class="display-6 fw-bold text-primary">
+                    {{ total_products }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h5 class="card-title">عدد الفواتير</h5>
+                <p class="display-6 fw-bold text-success">
+                    {{ total_invoices }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h5 class="card-title">قيمة المخزون</h5>
+                <p class="display-6 fw-bold text-info">
+                    {{ inventory_value }} جنيه
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h5 class="card-title">الأرباح</h5>
+                <p class="display-6 fw-bold text-danger">
+                    {{ net_profit }} جنيه
+                </p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
